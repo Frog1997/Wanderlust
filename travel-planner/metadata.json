@@ -1,0 +1,6 @@
+{
+  "name": "Travel Planner",
+  "description": "出國旅行行程規劃、預算管理與匯率轉換、即時地圖導航、離線存取、航班提醒與多用戶共同編輯應用程式",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
