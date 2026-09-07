@@ -1,20 +1,14 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# 出國準備與行程規劃 App (Wanderlust)
 
-# Run and deploy your AI Studio app
+這是一款為您量身打造的出國準備與行程規劃應用程式，提供預算管理、行程規劃、行李清單及航班追蹤等功能。
 
-This contains everything you need to run your app locally.
+## 應用程式網址 (App URLs)
 
-View your app in AI Studio: https://ai.studio/apps/79b568c6-99ee-454b-b8aa-edb3462bf52a
+您可以透過以下網址隨時訪問您的應用程式：
 
-## Run Locally
+- **對外分享 / 正式版網址 (Shared App URL):**
+  [https://ais-pre-2nrsguzulhn7yhimcyh4o2-63953953139.asia-northeast1.run.app](https://ais-pre-2nrsguzulhn7yhimcyh4o2-63953953139.asia-northeast1.run.app)
+  > 這是最適合分享給朋友或對外使用的公開網址。
 
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- **開發版網址 (Development App URL):**
+  [https://ais-dev-2nrsguzulhn7yhimcyh4o2-63953953139.asia-northeast1.run.app](https://ais-dev-2nrsguzulhn7yhimcyh4o2-63953953139.asia-northeast1.run.app)
