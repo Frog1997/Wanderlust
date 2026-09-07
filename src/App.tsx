@@ -8,6 +8,7 @@ import {
   INITIAL_TOKYO_TRIP 
 } from './services/storage';
 import { exportTripToPDF } from './services/pdfExport';
+import { ConfirmModal } from './components/ConfirmModal';
 
 import { Sidebar, ActiveTab } from './components/Sidebar';
 import { ItineraryView } from './components/ItineraryView';
@@ -15,6 +16,7 @@ import { BudgetView } from './components/BudgetView';
 import { AttractionsView } from './components/AttractionsView';
 import { FlightTrackerView } from './components/FlightTrackerView';
 
+import { ChecklistView } from './components/ChecklistView';
 import { TripSettingsModal } from './components/TripSettingsModal';
 import { Sparkles, WifiOff } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
@@ -23,6 +25,8 @@ export default function App() {
   const { isDarkMode, toggleDarkMode, themeColor, setThemeColor } = useTheme();
   
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -47,6 +51,7 @@ export default function App() {
 
   // Modals state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'edit' | 'switch' | 'create' | 'aiImport'>('edit');
   const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   // Save changes to localStorage & sync
@@ -71,6 +76,24 @@ export default function App() {
     setSelectedDayNumber(1);
   };
 
+  const handleDeleteTrip = (tripId: string) => {
+    // Cannot delete the last trip to avoid empty state issues (or we can create a new one automatically)
+    let updatedList = savedTrips.filter(t => t.id !== tripId);
+    
+    if (updatedList.length === 0) {
+      updatedList = [INITIAL_TOKYO_TRIP];
+    }
+    
+    setSavedTrips(updatedList);
+    saveTrips(updatedList);
+    
+    if (activeTripId === tripId) {
+      setActiveTripIdState(updatedList[0].id);
+      setActiveTripId(updatedList[0].id);
+      setSelectedDayNumber(1);
+    }
+  };
+
   // PDF Export
   const handleExportPDF = async () => {
     try {
@@ -85,14 +108,16 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col md:flex-row bg-stone-50 dark:bg-neutral-950 overflow-hidden text-stone-900 dark:text-white selection:bg-primary-500 selection:text-white">
+    <div className="h-screen flex flex-col md:flex-row bg-neutral-50 dark:bg-neutral-950 overflow-hidden text-neutral-900 dark:text-white selection:bg-primary-500 selection:text-white">
       {/* Sidebar Navigation */}
       <Sidebar
         trip={currentTrip}
+        onUpdateTrip={handleUpdateTrip}
         savedTrips={savedTrips}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenSettings={() => { setSettingsInitialTab('edit'); setIsSettingsOpen(true); }}
+        onOpenAIImport={() => { setSettingsInitialTab('aiImport'); setIsSettingsOpen(true); }}
         onExportPDF={handleExportPDF}
         isExportingPDF={isExportingPDF}
         onSelectTrip={handleSelectTrip}
@@ -142,6 +167,13 @@ export default function App() {
               onUpdateTrip={handleUpdateTrip}
             />
           )}
+
+          {activeTab === 'checklist' && (
+            <ChecklistView
+              trip={currentTrip}
+              onUpdateTrip={handleUpdateTrip}
+            />
+          )}
         </div>
       </main>
 
@@ -150,6 +182,7 @@ export default function App() {
       {/* Modals */}
 
       <TripSettingsModal
+        initialTab={settingsInitialTab}
         trip={currentTrip}
         savedTrips={savedTrips}
         isOpen={isSettingsOpen}
@@ -157,8 +190,22 @@ export default function App() {
         onSelectTrip={handleSelectTrip}
         onUpdateTrip={handleUpdateTrip}
         onCreateNewTrip={handleCreateNewTrip}
+        onDeleteTrip={handleDeleteTrip}
       />
 
+    
+      <ConfirmModal
+        isOpen={!!deleteConfirmId}
+        title="刪除旅程"
+        message="確定要刪除這個旅程嗎？此操作無法復原，所有相關的景點、行程與記帳都會被永久刪除。"
+        onConfirm={() => {
+          if (deleteConfirmId) {
+            handleDeleteTrip(deleteConfirmId);
+            setDeleteConfirmId(null);
+          }
+        }}
+        onCancel={() => setDeleteConfirmId(null)}
+      />
     </div>
   );
 }

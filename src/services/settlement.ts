@@ -1,5 +1,5 @@
 import { Collaborator, Expense } from '../types';
-import { formatMoney } from './currency';
+import { formatMoney, convertCurrency, getCachedRates } from './currency';
 
 export interface SettlementTransfer {
   from: string; // Member who owes money
@@ -34,7 +34,9 @@ export interface TripSettlementResult {
  */
 export function calculateTripSettlement(
   collaborators: Collaborator[],
-  expenses: Expense[]
+  expenses: Expense[],
+  settlementCurrency?: string,
+  rates: Record<string, number> = getCachedRates().rates
 ): TripSettlementResult {
   const balances: Record<string, number> = {};
   const totalPaidByMember: Record<string, number> = {};
@@ -49,7 +51,10 @@ export function calculateTripSettlement(
 
   // Calculate debts and credits
   expenses.forEach((exp) => {
-    const totalCost = exp.convertedAmount;
+    // Use target currency if specified, else use base currency (which is convertedAmount if no settlementCurrency is passed)
+    const totalCost = settlementCurrency 
+      ? convertCurrency(exp.amount, exp.originalCurrency, settlementCurrency, rates) 
+      : exp.convertedAmount;
     const splitList = exp.splitWith && exp.splitWith.length > 0 ? exp.splitWith : [exp.paidBy];
     const splitCount = splitList.length;
     const perPerson = splitCount > 0 ? totalCost / splitCount : 0;
@@ -138,7 +143,7 @@ export function calculateTripSettlement(
         const splitList = e.splitWith && e.splitWith.length > 0 ? e.splitWith : [e.paidBy];
         return {
           expense: e,
-          shareAmount: Math.round((e.convertedAmount / splitList.length) * 100) / 100,
+          shareAmount: Math.round(((settlementCurrency ? convertCurrency(e.amount, e.originalCurrency, settlementCurrency, rates) : e.convertedAmount) / splitList.length) * 100) / 100,
         };
       });
 

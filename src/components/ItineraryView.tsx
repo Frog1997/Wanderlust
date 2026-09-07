@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { Trip, DayPlan, ItineraryItem, PlaceCategory, TransportOption } from '../types';
-import { 
+import {  
   Plus, 
   Trash2, 
   Edit3, 
@@ -26,11 +28,12 @@ import {
   Umbrella,
   ExternalLink,
   Link2
-} from 'lucide-react';
+, ChevronDown, Edit2, Search } from 'lucide-react';
 import { formatMoney } from '../services/currency';
 import { fetchTripWeather, getCachedTripWeather, TripWeatherData } from '../services/weather';
 import { WeatherDetailModal, WeatherIcon } from './WeatherDetailModal';
 import { MoveDayModal } from './MoveDayModal';
+import { ConfirmModal } from './ConfirmModal';
 
 interface ItineraryViewProps {
   trip: Trip;
@@ -46,6 +49,12 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
   onUpdateTrip,
 }) => {
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [editingThemeDayId, setEditingThemeDayId] = useState<string | null>(null);
+  const [editingThemeTitle, setEditingThemeTitle] = useState('');
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
   const [editingItem, setEditingItem] = useState<ItineraryItem | null>(null);
   const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
 
@@ -66,6 +75,12 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
   }]);
 
   const activeDay = trip.days.find((d) => d.dayNumber === selectedDayNumber) || trip.days[0];
+  const filteredItems = activeDay?.items.filter(item => 
+    !searchQuery || 
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (item.locationName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (item.notes || '').toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
 
   // Weather state
   const [weatherData, setWeatherData] = useState<TripWeatherData | null>(() => getCachedTripWeather(trip.id));
@@ -340,18 +355,18 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
       case 'transport':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       default:
-        return 'bg-stone-100 dark:bg-neutral-800 text-stone-700 dark:text-neutral-300 border-stone-200 dark:border-neutral-700';
+        return 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700';
     }
   };
 
   return (
     <div className="space-y-6">
       {/* Day Selector Header & Tabs */}
-      <div className="bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-stone-200 dark:border-neutral-700 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-stone-100 dark:border-neutral-800">
+      <div className="bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-100 dark:border-neutral-800">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-primary-600" />
-            <h2 className="text-base font-bold text-stone-900 dark:text-white">行程時程規劃 (Itinerary Timeline)</h2>
+            <h2 className="text-base font-bold text-neutral-900 dark:text-white">行程時程規劃 (Itinerary Timeline)</h2>
             <span className="px-2 py-0.5 bg-primary-50 text-primary-700 text-xs font-semibold rounded-full">
               共 {trip.days.length} 天
             </span>
@@ -381,7 +396,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                 className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-2.5 rounded-xl border text-left transition-all ${
                   isSelected
                     ? 'bg-primary-600 text-white border-primary-600 shadow-md shadow-primary-600/20'
-                    : 'bg-white dark:bg-neutral-900 text-stone-700 dark:text-neutral-300 border-stone-200 dark:border-neutral-700 hover:bg-stone-50 dark:hover:bg-neutral-800 hover:border-stone-300 dark:border-neutral-600'
+                    : 'bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:border-neutral-300 dark:border-neutral-600'
                 }`}
               >
                 <div>
@@ -391,13 +406,13 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                       <WeatherIcon type={dayForecast.iconType} className="w-3.5 h-3.5 flex-shrink-0" />
                     )}
                   </div>
-                  <div className={`text-[11px] ${isSelected ? 'text-primary-100' : 'text-stone-400 dark:text-neutral-600'}`}>
+                  <div className={`text-[11px] ${isSelected ? 'text-primary-100' : 'text-neutral-400 dark:text-neutral-600'}`}>
                     {day.date.substring(5)}
                     {dayForecast && ` • ${dayForecast.tempMax}°`}
                   </div>
                 </div>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-semibold ${
-                  isSelected ? 'bg-white/20 dark:bg-neutral-900/20 text-white' : 'bg-stone-100 dark:bg-neutral-800 text-stone-600 dark:text-neutral-400'
+                  isSelected ? 'bg-white/20 dark:bg-neutral-900/20 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
                 }`}>
                   {day.items.length} 點
                 </span>
@@ -409,7 +424,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
 
       {/* Selected Day Theme & Weather Card */}
       {activeDay && (
-        <div className="bg-gradient-to-r from-stone-900 to-primary-950 text-white p-5 rounded-2xl shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div className="bg-gradient-to-r from-neutral-900 to-primary-950 text-white p-5 rounded-2xl shadow-sm flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2 text-primary-300 text-xs font-semibold">
               <span>Day {activeDay.dayNumber} • {activeDay.date}</span>
@@ -463,7 +478,40 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                 );
               })()}
             </div>
-            <h3 className="text-lg font-bold text-white tracking-tight">{activeDay.themeTitle}</h3>
+            {editingThemeDayId === activeDay.id ? (
+              <input
+                ref={inputRef}
+                type="text"
+                value={editingThemeTitle}
+                onChange={(e) => setEditingThemeTitle(e.target.value)}
+                onBlur={() => {
+                  const updatedDays = trip.days.map(d => d.id === activeDay.id ? { ...d, themeTitle: editingThemeTitle } : d);
+                  onUpdateTrip({ ...trip, days: updatedDays });
+                  setEditingThemeDayId(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const updatedDays = trip.days.map(d => d.id === activeDay.id ? { ...d, themeTitle: editingThemeTitle } : d);
+                    onUpdateTrip({ ...trip, days: updatedDays });
+                    setEditingThemeDayId(null);
+                  }
+                  if (e.key === 'Escape') setEditingThemeDayId(null);
+                }}
+                className="text-lg font-bold text-white tracking-tight bg-white/20 border border-white/40 rounded-lg px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-white/50 w-full max-w-sm"
+                autoFocus
+              />
+            ) : (
+              <h3 
+                className="text-lg font-bold text-white tracking-tight cursor-pointer hover:bg-white/10 px-2 py-0.5 rounded-lg -ml-2 transition-colors flex items-center gap-2 group"
+                onClick={() => {
+                  setEditingThemeDayId(activeDay.id);
+                  setEditingThemeTitle(activeDay.themeTitle);
+                }}
+              >
+                {activeDay.themeTitle}
+                <Edit2 className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </h3>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -480,16 +528,16 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
 
       {/* Add / Edit Item Modal */}
       {(isAddingItem || editingItem) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-neutral-900 w-full max-w-lg rounded-2xl shadow-2xl border border-stone-200 dark:border-neutral-700 overflow-hidden">
-            <div className="p-5 bg-stone-50 dark:bg-neutral-950 border-b border-stone-200 dark:border-neutral-700 flex justify-between items-center">
-              <h4 className="font-bold text-stone-900 dark:text-white text-base flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white dark:bg-neutral-900 w-full max-w-lg rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+            <div className="p-5 bg-neutral-50 dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-700 flex justify-between items-center">
+              <h4 className="font-bold text-neutral-900 dark:text-white text-base flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary-600" />
                 <span>{editingItem ? '編輯行程項目' : '新增行程活動 / 景點'}</span>
               </h4>
               <button
                 onClick={resetForm}
-                className="text-stone-400 dark:text-neutral-600 hover:text-stone-600 dark:text-neutral-400 text-sm font-bold"
+                className="text-neutral-400 dark:text-neutral-600 hover:text-neutral-600 dark:text-neutral-400 text-sm font-bold"
               >
                 ✕
               </button>
@@ -497,81 +545,132 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
 
             <form onSubmit={handleSaveItem} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
               <div>
-                <label className="block text-xs font-bold text-stone-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1.5">
                   活動或景點名稱 *
                 </label>
                 <input
                   type="text"
-                  required
+                  
                   placeholder="例如：SHIBUYA SKY 展望台、築地生鮮午餐"
                   value={itemTitle}
                   onChange={(e) => setItemTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-sm font-bold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all hover:border-primary-400 dark:hover:border-primary-600 shadow-sm"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1.5">
                     開始時間 *
                   </label>
-                  <input
-                    type="time"
-                    required
-                    value={itemTime}
-                    onChange={(e) => setItemTime(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl border border-stone-200 dark:border-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                      <Clock className="w-4 h-4 text-neutral-400 group-hover:text-primary-500 transition-colors" />
+                    </div>
+                    <DatePicker
+                      selected={itemTime ? new Date(`2000-01-01T${itemTime}:00`) : null}
+                      onChange={(date) => {
+                        if (date) {
+                          const hours = date.getHours().toString().padStart(2, '0');
+                          const minutes = date.getMinutes().toString().padStart(2, '0');
+                          setItemTime(`${hours}:${minutes}`);
+                        }
+                      }}
+                      showTimeSelect
+                      showTimeSelectOnly
+                      timeIntervals={15}
+                      timeFormat="HH:mm"
+                      timeCaption="時間"
+                      dateFormat="HH:mm"
+                      className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-sm font-bold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all cursor-pointer hover:border-primary-400 dark:hover:border-primary-600 shadow-sm"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1.5">
                     結束時間
                   </label>
-                  <input
-                    type="time"
-                    value={itemEndTime}
-                    onChange={(e) => setItemEndTime(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl border border-stone-200 dark:border-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                      <Clock className="w-4 h-4 text-neutral-400 group-hover:text-primary-500 transition-colors" />
+                    </div>
+                    <DatePicker
+                      selected={itemEndTime ? new Date(`2000-01-01T${itemEndTime}:00`) : null}
+                      onChange={(date) => {
+                        if (date) {
+                          const hours = date.getHours().toString().padStart(2, '0');
+                          const minutes = date.getMinutes().toString().padStart(2, '0');
+                          setItemEndTime(`${hours}:${minutes}`);
+                        } else {
+                          setItemEndTime('');
+                        }
+                      }}
+                      isClearable
+                      placeholderText="未設定"
+                      showTimeSelect
+                      showTimeSelectOnly
+                      timeIntervals={15}
+                      timeFormat="HH:mm"
+                      timeCaption="時間"
+                      dateFormat="HH:mm"
+                      className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-sm font-bold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all cursor-pointer hover:border-primary-400 dark:hover:border-primary-600 shadow-sm"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1.5">
                     分類類型
                   </label>
-                  <select
-                    value={itemCategory}
-                    onChange={(e) => setItemCategory(e.target.value as PlaceCategory)}
-                    className="w-full px-3.5 py-2 rounded-xl border border-stone-200 dark:border-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="sightseeing">🏛️ 觀光景點</option>
-                    <option value="food">🍜 美食餐廳</option>
-                    <option value="shopping">🛍️ 購物商圈</option>
-                    <option value="stay">🏨 飯店住宿</option>
-                    <option value="transport">🚆 交通轉乘</option>
-                    <option value="entertainment">🎡 娛樂休閒</option>
-                    <option value="other">📌 其他活動</option>
-                  </select>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { value: 'sightseeing', label: '🏛️ 觀光' },
+                      { value: 'food', label: '🍜 美食' },
+                      { value: 'shopping', label: '🛍️ 購物' },
+                      { value: 'stay', label: '🏨 住宿' },
+                      { value: 'transport', label: '🚆 交通' },
+                      { value: 'entertainment', label: '🎡 娛樂' },
+                      { value: 'other', label: '📌 其他' },
+                    ].map(cat => (
+                      <button
+                        key={cat.value}
+                        type="button"
+                        onClick={() => setItemCategory(cat.value as PlaceCategory)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                          itemCategory === cat.value
+                            ? 'bg-primary-50 dark:bg-primary-950 border-primary-500 text-primary-700 dark:text-primary-400 shadow-sm ring-1 ring-primary-500/20'
+                            : 'bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1.5">
                     預估花費 ({trip.targetCurrency})
                   </label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={itemCost || ''}
-                    onChange={(e) => setItemCost(e.target.value ? Number(e.target.value) : undefined)}
-                    className="w-full px-3.5 py-2 rounded-xl border border-stone-200 dark:border-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                      <DollarSign className="w-4 h-4 text-neutral-400 group-hover:text-primary-500 transition-colors" />
+                    </div>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={itemCost || ''}
+                      onChange={(e) => setItemCost(e.target.value ? Number(e.target.value) : undefined)}
+                      className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-sm font-bold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all hover:border-primary-400 dark:hover:border-primary-600 shadow-sm"
+                    />
+                  </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1.5">
                   地點 / 地址
                 </label>
                 <input
@@ -579,12 +678,12 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                   placeholder="例如：東京都渋谷区渋谷2-24-12"
                   value={itemLocation}
                   onChange={(e) => setItemLocation(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-stone-200 dark:border-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3.5 py-2 rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-sm font-bold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all hover:border-primary-400 dark:hover:border-primary-600 shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 dark:text-neutral-300 mb-1 flex items-center gap-1">
+                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1 flex items-center gap-1">
                   <Navigation2 className="w-3.5 h-3.5" />
                   自訂導航網址 (選填)
                 </label>
@@ -593,12 +692,12 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                   placeholder="提供精確的 Google Maps 或其他導航網址"
                   value={itemNavigateUrl}
                   onChange={(e) => setItemNavigateUrl(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-stone-200 dark:border-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3.5 py-2 rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-sm font-bold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all hover:border-primary-400 dark:hover:border-primary-600 shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 dark:text-neutral-300 mb-1 flex items-center gap-1">
+                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1 flex items-center gap-1">
                   <Link2 className="w-3.5 h-3.5" />
                   攻略參考網址 (可加入多筆)
                 </label>
@@ -614,7 +713,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                           newLinks[i] = { ...newLinks[i], label: e.target.value };
                           setItemReferenceLinks(newLinks);
                         }}
-                        className="w-1/3 px-3.5 py-2 rounded-xl border border-stone-200 dark:border-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="w-1/3 px-3.5 py-2 rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-sm font-bold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all hover:border-primary-400 dark:hover:border-primary-600 shadow-sm"
                       />
                       <input
                         type="url"
@@ -625,7 +724,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                           newLinks[i] = { ...newLinks[i], url: e.target.value };
                           setItemReferenceLinks(newLinks);
                         }}
-                        className="w-2/3 px-3.5 py-2 rounded-xl border border-stone-200 dark:border-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="w-2/3 px-3.5 py-2 rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-sm font-bold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all hover:border-primary-400 dark:hover:border-primary-600 shadow-sm"
                       />
                       <button
                         type="button"
@@ -652,7 +751,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1.5">
                   備註與注意事項
                 </label>
                 <textarea
@@ -660,14 +759,14 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                   placeholder="例如：已事先訂票、門票憑證在信箱、禁止攜帶自拍棒"
                   value={itemNotes}
                   onChange={(e) => setItemNotes(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-stone-200 dark:border-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3.5 py-2 rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-sm font-bold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all hover:border-primary-400 dark:hover:border-primary-600 shadow-sm"
                 />
               </div>
 
               {/* Transport to next option */}
-              <div className="p-3 bg-stone-50 dark:bg-neutral-950 rounded-xl border border-stone-200 dark:border-neutral-700 space-y-4">
+              <div className="p-3 bg-neutral-50 dark:bg-neutral-950 rounded-xl border border-neutral-200 dark:border-neutral-700 space-y-4">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-bold text-stone-700 dark:text-neutral-300">
+                  <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300">
                     抵達下一個點之交通方式
                   </label>
                   <button
@@ -681,7 +780,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                 </div>
 
                 {transportOptions.map((opt, optIndex) => (
-                  <div key={optIndex} className="p-2 border border-stone-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-neutral-900 relative">
+                  <div key={optIndex} className="p-2 border border-neutral-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-neutral-900 relative">
                     {transportOptions.length > 1 && (
                       <button
                         type="button"
@@ -697,7 +796,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                       </button>
                     )}
                     
-                    <div className="grid grid-cols-2 gap-2 pr-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pr-8">
                       <select
                         value={opt.mode}
                         onChange={(e) => {
@@ -705,7 +804,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                           newOpts[optIndex] = { ...newOpts[optIndex], mode: e.target.value as any };
                           setTransportOptions(newOpts);
                         }}
-                        className="px-3 py-1.5 rounded-lg border border-stone-200 dark:border-neutral-700 text-xs bg-white dark:bg-neutral-900"
+                        className="appearance-none px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 text-xs bg-white dark:bg-neutral-900 pr-8"
                       >
                         <option value="walk">🚶 步行 Walk</option>
                         <option value="subway">🚇 地鐵 Subway</option>
@@ -723,15 +822,15 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                             newOpts[optIndex] = { ...newOpts[optIndex], durationMinutes: Number(e.target.value) };
                             setTransportOptions(newOpts);
                           }}
-                          className="w-16 px-2 py-1.5 rounded-lg border border-stone-200 dark:border-neutral-700 text-xs bg-white dark:bg-neutral-900 text-center"
+                          className="w-16 px-2 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 text-xs bg-white dark:bg-neutral-900 text-center"
                         />
-                        <span className="text-xs text-stone-600 dark:text-neutral-400">分鐘</span>
+                        <span className="text-xs text-neutral-600 dark:text-neutral-400">分鐘</span>
                       </div>
                     </div>
                     
                     {/* Transport Routes */}
                     <div className="mt-3 space-y-2">
-                      <label className="block text-[11px] font-bold text-stone-600 dark:text-neutral-400">
+                      <label className="block text-[11px] font-bold text-neutral-600 dark:text-neutral-400">
                         交通方式詳情與導航網址 (可加入多筆)
                       </label>
                       {(opt.routes || []).map((route, i) => (
@@ -747,7 +846,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                               newOpts[optIndex] = { ...newOpts[optIndex], routes: newRoutes };
                               setTransportOptions(newOpts);
                             }}
-                            className="w-1/3 px-2 py-1.5 rounded-lg border border-stone-200 dark:border-neutral-700 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="w-1/3 px-2 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
                           />
                           <input
                             type="url"
@@ -760,7 +859,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                               newOpts[optIndex] = { ...newOpts[optIndex], routes: newRoutes };
                               setTransportOptions(newOpts);
                             }}
-                            className="w-2/3 px-2 py-1.5 rounded-lg border border-stone-200 dark:border-neutral-700 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="w-2/3 px-2 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
                           />
                           <button
                             type="button"
@@ -784,7 +883,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                           newOpts[optIndex] = { ...newOpts[optIndex], routes: [...(newOpts[optIndex].routes || []), { label: '', url: '' }] };
                           setTransportOptions(newOpts);
                         }}
-                        className="flex items-center gap-1 px-3 py-1 text-[11px] font-bold text-stone-500 bg-stone-100 hover:bg-stone-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+                        className="flex items-center gap-1 px-3 py-1 text-[11px] font-bold text-neutral-500 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-lg transition-colors"
                       >
                         <Plus className="w-3 h-3" />
                         加入路線或地點網址
@@ -794,11 +893,11 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                 ))}
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-stone-100 dark:border-neutral-800">
+              <div className="flex justify-end gap-2 pt-3 border-t border-neutral-100 dark:border-neutral-800">
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-stone-600 dark:text-neutral-400 hover:bg-stone-100 dark:hover:bg-neutral-700 dark:bg-neutral-800"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 dark:bg-neutral-800"
                 >
                   取消
                 </button>
@@ -814,15 +913,29 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
         </div>
       )}
 
+            {/* Search Bar */}
+      {activeDay && activeDay.items.length > 0 && (
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none z-10" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="搜尋行程名稱、地點或備註..."
+            className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all shadow-sm"
+          />
+        </div>
+      )}
+
       {/* Timeline Activities List */}
       <div className="space-y-4">
         {activeDay && activeDay.items.length === 0 ? (
-          <div className="text-center py-16 bg-white dark:bg-neutral-900 rounded-2xl border border-dashed border-stone-300 dark:border-neutral-600 p-8">
+          <div className="text-center py-16 bg-white dark:bg-neutral-900 rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-600 p-8">
             <div className="w-12 h-12 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center mx-auto mb-3">
               <Calendar className="w-6 h-6" />
             </div>
-            <h4 className="text-base font-bold text-stone-800 dark:text-neutral-200">今天尚無任何排定行程</h4>
-            <p className="text-xs text-stone-500 dark:text-neutral-500 max-w-sm mx-auto mt-1 mb-4">
+            <h4 className="text-base font-bold text-neutral-800 dark:text-neutral-200">今天尚無任何排定行程</h4>
+            <p className="text-xs text-neutral-500 dark:text-neutral-500 max-w-sm mx-auto mt-1 mb-4">
               點擊「新增景點/活動」或從「景點紀錄清單」中一鍵匯入喜愛的名勝美食。
             </p>
             <button
@@ -833,9 +946,18 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
               <span>立即加入第一個景點</span>
             </button>
           </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="text-center py-12 bg-white dark:bg-neutral-900 rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-600 p-8">
+            <div className="w-12 h-12 rounded-2xl bg-neutral-50 dark:bg-neutral-800 text-neutral-400 flex items-center justify-center mx-auto mb-3">
+              <Search className="w-6 h-6" />
+            </div>
+            <h4 className="text-sm font-bold text-neutral-800 dark:text-neutral-200">找不到符合搜尋的行程</h4>
+            <p className="text-xs text-neutral-500 mt-1">請嘗試其他關鍵字，或清空搜尋欄</p>
+          </div>
         ) : (
-          <div className="relative pl-6 sm:pl-8 before:absolute before:left-3 sm:before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-stone-200 dark:bg-neutral-700 space-y-6">
-            {activeDay?.items.map((item, index) => {
+          <div className="relative pl-6 sm:pl-8 before:absolute before:left-3 sm:before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-neutral-200 dark:bg-neutral-700 space-y-6">
+            {filteredItems.map((item) => {
+              const index = activeDay.items.findIndex(i => i.id === item.id);
               return (
                 <div key={item.id} className="relative group">
                   {/* Timeline bullet */}
@@ -845,7 +967,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                     className={`absolute -left-6 sm:-left-8 top-3 w-6 h-6 rounded-full border-2 flex items-center justify-center bg-white dark:bg-neutral-900 transition-all ${
                       item.completed
                         ? 'border-emerald-500 text-emerald-500 bg-emerald-50'
-                        : 'border-stone-300 dark:border-neutral-600 text-stone-400 dark:text-neutral-600 group-hover:border-primary-500 group-hover:text-primary-500'
+                        : 'border-neutral-300 dark:border-neutral-600 text-neutral-400 dark:text-neutral-600 group-hover:border-primary-500 group-hover:text-primary-500'
                     }`}
                   >
                     {item.completed ? (
@@ -857,16 +979,16 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
 
                   {/* Main Activity Card */}
                   <div 
-                    draggable
+                    draggable={!searchQuery}
                     onDragStart={() => setDraggedItemIndex(index)}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => handleDrop(e, index)}
-                    className={`p-4 sm:p-5 rounded-2xl border transition-all cursor-grab active:cursor-grabbing ${
+                    className={`p-4 sm:p-5 rounded-2xl border transition-all ${!searchQuery ? 'cursor-grab active:cursor-grabbing' : ''} ${
                       draggedItemIndex === index ? 'opacity-50 border-primary-500 bg-primary-50 shadow-md' : ''
                     } ${
                       item.completed
-                        ? 'bg-stone-50/80 dark:bg-neutral-950/80 border-stone-200 dark:border-neutral-700 opacity-75'
-                        : 'bg-white dark:bg-neutral-900 border-stone-200/90 dark:border-neutral-700/90 hover:border-stone-300 dark:border-neutral-600 hover:shadow-md'
+                        ? 'bg-neutral-50/80 dark:bg-neutral-950/80 border-neutral-200 dark:border-neutral-700 opacity-75'
+                        : 'bg-white dark:bg-neutral-900 border-neutral-200/90 dark:border-neutral-700/90 hover:border-neutral-300 dark:border-neutral-600 hover:shadow-md'
                     }`}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -882,18 +1004,18 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                             <span className="capitalize">{item.category}</span>
                           </span>
                           {item.cost && item.cost > 0 && (
-                            <span className="text-xs font-bold text-stone-700 dark:text-neutral-300 bg-stone-100 dark:bg-neutral-800 px-2 py-0.5 rounded-md">
+                            <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-md">
                               {formatMoney(item.cost, item.currency || trip.targetCurrency)}
                             </span>
                           )}
                         </div>
 
-                        <h4 className={`text-base font-bold text-stone-900 dark:text-white mt-1 ${item.completed ? 'line-through text-stone-500 dark:text-neutral-500' : ''}`}>
+                        <h4 className={`text-base font-bold text-neutral-900 dark:text-white mt-1 ${item.completed ? 'line-through text-neutral-500 dark:text-neutral-500' : ''}`}>
                           {item.title}
                         </h4>
 
-                        <div className="flex items-center gap-1.5 text-xs text-stone-500 dark:text-neutral-500">
-                          <MapPin className="w-3.5 h-3.5 text-stone-400 dark:text-neutral-600" />
+                        <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-500">
+                          <MapPin className="w-3.5 h-3.5 text-neutral-400 dark:text-neutral-600" />
                           <span>{item.locationName}</span>
                         </div>
 
@@ -934,26 +1056,26 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                           type="button"
                           onClick={() => setItemToMove(item)}
                           title="移動到其他天"
-                          className="flex items-center gap-1 px-2.5 py-1.5 text-stone-600 dark:text-neutral-300 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950/40 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-neutral-600 dark:text-neutral-300 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950/40 rounded-lg text-xs font-semibold transition-all cursor-pointer"
                         >
                           <Calendar className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
                           <span className="hidden sm:inline">移至別天</span>
                         </button>
 
                         <button
-                          disabled={index === 0}
+                          disabled={index === 0 || !!searchQuery}
                           onClick={() => handleMoveItem(index, 'up')}
                           title="往上移"
-                          className="p-1.5 text-stone-400 dark:text-neutral-600 hover:text-stone-700 dark:hover:text-neutral-200 dark:text-neutral-300 rounded-lg hover:bg-stone-100 dark:hover:bg-neutral-700 dark:bg-neutral-800 disabled:opacity-25"
+                          className="p-1.5 text-neutral-400 dark:text-neutral-600 hover:text-neutral-700 dark:hover:text-neutral-200 dark:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 dark:bg-neutral-800 disabled:opacity-25"
                         >
                           <MoveUp className="w-3.5 h-3.5" />
                         </button>
 
                         <button
-                          disabled={index === activeDay.items.length - 1}
+                          disabled={index === activeDay.items.length - 1 || !!searchQuery}
                           onClick={() => handleMoveItem(index, 'down')}
                           title="往下移"
-                          className="p-1.5 text-stone-400 dark:text-neutral-600 hover:text-stone-700 dark:hover:text-neutral-200 dark:text-neutral-300 rounded-lg hover:bg-stone-100 dark:hover:bg-neutral-700 dark:bg-neutral-800 disabled:opacity-25"
+                          className="p-1.5 text-neutral-400 dark:text-neutral-600 hover:text-neutral-700 dark:hover:text-neutral-200 dark:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 dark:bg-neutral-800 disabled:opacity-25"
                         >
                           <MoveDown className="w-3.5 h-3.5" />
                         </button>
@@ -986,15 +1108,15 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                             }
                           }}
                           title="編輯"
-                          className="p-1.5 text-stone-400 dark:text-neutral-600 hover:text-stone-700 dark:hover:text-neutral-200 dark:text-neutral-300 rounded-lg hover:bg-stone-100 dark:hover:bg-neutral-700 dark:bg-neutral-800"
+                          className="p-1.5 text-neutral-400 dark:text-neutral-600 hover:text-neutral-700 dark:hover:text-neutral-200 dark:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 dark:bg-neutral-800"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
 
                         <button
-                          onClick={() => handleDeleteItem(item.id)}
+                          onClick={() => setDeleteConfirmId(item.id)}
                           title="刪除"
-                          className="p-1.5 text-stone-400 dark:text-neutral-600 hover:text-rose-600 rounded-lg hover:bg-rose-50"
+                          className="p-1.5 text-neutral-400 dark:text-neutral-600 hover:text-rose-600 rounded-lg hover:bg-rose-50"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1003,7 +1125,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
 
                     {/* Notes block */}
                     {item.notes && (
-                      <p className="mt-3 text-xs text-stone-600 dark:text-neutral-400 bg-stone-50/90 dark:bg-neutral-950/90 p-3 rounded-xl border border-stone-100 dark:border-neutral-800 leading-relaxed">
+                      <p className="mt-3 text-xs text-neutral-600 dark:text-neutral-400 bg-neutral-50/90 dark:bg-neutral-950/90 p-3 rounded-xl border border-neutral-100 dark:border-neutral-800 leading-relaxed">
                         {item.notes}
                       </p>
                     )}
@@ -1013,7 +1135,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                   {(item.transportOptions?.length ? item.transportOptions : (item.transportToNext ? [item.transportToNext] : [])).length > 0 && index < activeDay.items.length - 1 && (
                     <div className="my-2 ml-4 flex flex-col gap-2">
                       {(item.transportOptions?.length ? item.transportOptions : (item.transportToNext ? [item.transportToNext] : [])).map((transport, tIdx) => (
-                        <div key={tIdx} className="flex items-start gap-2 text-xs text-stone-500 dark:text-neutral-500 font-medium">
+                        <div key={tIdx} className="flex items-start gap-2 text-xs text-neutral-500 dark:text-neutral-500 font-medium">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary-400 mt-2 flex-shrink-0"></div>
                           
                           {transport.routes && transport.routes.length > 0 ? (
@@ -1024,7 +1146,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                                   href={route.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="bg-stone-100 hover:bg-stone-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 px-2.5 py-1 rounded-full text-[11px] text-primary-700 dark:text-primary-400 flex items-center gap-1.5 border border-stone-200 dark:border-neutral-700 transition-colors"
+                                  className="bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 px-2.5 py-1 rounded-full text-[11px] text-primary-700 dark:text-primary-400 flex items-center gap-1.5 border border-neutral-200 dark:border-neutral-700 transition-colors"
                                   title={route.url}
                                 >
                                   {transport.mode === 'subway' && '🚇'}
@@ -1039,7 +1161,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                               ))}
                             </div>
                           ) : (
-                            <span className="bg-stone-100 dark:bg-neutral-800 px-2.5 py-1 rounded-full text-[11px] text-stone-600 dark:text-neutral-400 flex items-center gap-1.5 border border-stone-200 dark:border-neutral-700">
+                            <span className="bg-neutral-100 dark:bg-neutral-800 px-2.5 py-1 rounded-full text-[11px] text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5 border border-neutral-200 dark:border-neutral-700">
                               {transport.mode === 'subway' && '🚇 地鐵轉乘'}
                               {transport.mode === 'walk' && '🚶 步行'}
                               {transport.mode === 'bus' && '🚌 公車'}
@@ -1048,7 +1170,7 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
                               {transport.mode === 'car' && '🚗 自駕 / 租車'}
                               <span>約 {transport.durationMinutes} 分鐘</span>
                               {transport.distanceText && (
-                                <span className="text-stone-400 dark:text-neutral-600">({transport.distanceText})</span>
+                                <span className="text-neutral-400 dark:text-neutral-600">({transport.distanceText})</span>
                               )}
                             </span>
                           )}
@@ -1086,6 +1208,19 @@ export const ItineraryView: React.FC<ItineraryViewProps> = ({
             setItemToMove(null);
           }
         }}
+      />
+    
+      <ConfirmModal
+        isOpen={!!deleteConfirmId}
+        title="確認刪除"
+        message="您確定要刪除此項目嗎？此操作無法復原。"
+        onConfirm={() => {
+          if (deleteConfirmId) {
+            handleDeleteItem(deleteConfirmId);
+            setDeleteConfirmId(null);
+          }
+        }}
+        onCancel={() => setDeleteConfirmId(null)}
       />
     </div>
   );
