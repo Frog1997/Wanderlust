@@ -39,7 +39,7 @@ export const WeatherIcon: React.FC<{
     case 'cloud-sun':
       return <CloudSun className={`${className} text-amber-300`} />;
     case 'cloud':
-      return <Cloud className={`${className} text-stone-400 dark:text-neutral-400`} />;
+      return <Cloud className={`${className} text-neutral-400 dark:text-neutral-400`} />;
     case 'drizzle':
       return <CloudDrizzle className={`${className} text-sky-400`} />;
     case 'rain':
@@ -49,7 +49,7 @@ export const WeatherIcon: React.FC<{
     case 'lightning':
       return <CloudLightning className={`${className} text-yellow-400`} />;
     case 'fog':
-      return <CloudFog className={`${className} text-stone-400`} />;
+      return <CloudFog className={`${className} text-neutral-400`} />;
     default:
       return <Sun className={`${className} text-amber-400`} />;
   }
@@ -84,8 +84,8 @@ export const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-white dark:bg-neutral-900 w-full max-w-xl rounded-3xl shadow-2xl border border-stone-200 dark:border-neutral-800 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70 backdrop-blur-sm animate-in fade-in">
+      <div className="bg-white dark:bg-neutral-900 w-full max-w-xl rounded-3xl shadow-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="p-5 bg-gradient-to-r from-sky-600 via-primary-600 to-indigo-700 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -131,21 +131,21 @@ export const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({
         <div className="p-5 overflow-y-auto space-y-5">
           {/* Current Conditions Card */}
           {current ? (
-            <div className="p-4 bg-stone-50 dark:bg-neutral-950 rounded-2xl border border-stone-200 dark:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-2xl border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-white dark:bg-neutral-900 rounded-2xl shadow-xs border border-stone-200/60 dark:border-neutral-800 flex items-center justify-center">
+                <div className="p-3 bg-white dark:bg-neutral-900 rounded-2xl shadow-xs border border-neutral-200/60 dark:border-neutral-800 flex items-center justify-center">
                   <WeatherIcon type={current.iconType} className="w-10 h-10" />
                 </div>
                 <div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-black text-stone-900 dark:text-white font-mono">
+                    <span className="text-3xl font-black text-neutral-900 dark:text-white font-mono">
                       {current.temp}°C
                     </span>
-                    <span className="text-sm font-bold text-stone-600 dark:text-neutral-300">
+                    <span className="text-sm font-bold text-neutral-600 dark:text-neutral-300">
                       {current.weatherText}
                     </span>
                   </div>
-                  <div className="text-xs text-stone-400 dark:text-neutral-500 mt-0.5">
+                  <div className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
                     體感溫度 {current.apparentTemp}°C
                   </div>
                 </div>
@@ -153,24 +153,24 @@ export const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({
 
               {/* Extra Stats */}
               <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
-                <div className="px-3 py-2 bg-white dark:bg-neutral-900 rounded-xl border border-stone-100 dark:border-neutral-800 flex items-center gap-2">
+                <div className="px-3 py-2 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-100 dark:border-neutral-800 flex items-center gap-2">
                   <Droplets className="w-4 h-4 text-sky-500 flex-shrink-0" />
                   <div>
-                    <div className="text-[10px] text-stone-400 dark:text-neutral-500">相對濕度</div>
-                    <div className="text-xs font-bold text-stone-800 dark:text-neutral-200">{current.humidity}%</div>
+                    <div className="text-[10px] text-neutral-400 dark:text-neutral-500">相對濕度</div>
+                    <div className="text-xs font-bold text-neutral-800 dark:text-neutral-200">{current.humidity}%</div>
                   </div>
                 </div>
-                <div className="px-3 py-2 bg-white dark:bg-neutral-900 rounded-xl border border-stone-100 dark:border-neutral-800 flex items-center gap-2">
+                <div className="px-3 py-2 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-100 dark:border-neutral-800 flex items-center gap-2">
                   <Wind className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                   <div>
-                    <div className="text-[10px] text-stone-400 dark:text-neutral-500">風速</div>
-                    <div className="text-xs font-bold text-stone-800 dark:text-neutral-200">{current.windSpeed} km/h</div>
+                    <div className="text-[10px] text-neutral-400 dark:text-neutral-500">風速</div>
+                    <div className="text-xs font-bold text-neutral-800 dark:text-neutral-200">{current.windSpeed} km/h</div>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="p-6 text-center text-stone-400 dark:text-neutral-600">
+            <div className="p-6 text-center text-neutral-400 dark:text-neutral-600">
               {isLoading ? '載入氣象資料中...' : '目前無法取得即時天氣，請檢查網路連線'}
             </div>
           )}
@@ -179,7 +179,7 @@ export const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({
           {weatherData && weatherData.daily.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-bold text-stone-500 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5" />
                   未來 14 天天氣預報
                 </h4>
@@ -201,15 +201,15 @@ export const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({
                       className={`p-2.5 rounded-xl border flex items-center justify-between transition-all ${
                         isCurrentDay
                           ? 'bg-primary-50 dark:bg-primary-950/40 border-primary-300 dark:border-primary-800 shadow-xs'
-                          : 'bg-white dark:bg-neutral-900 border-stone-100 dark:border-neutral-800 hover:border-stone-200 dark:hover:border-neutral-700'
+                          : 'bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 hover:border-neutral-200 dark:hover:border-neutral-700'
                       }`}
                     >
                       {/* Date & Weekday */}
                       <div className="flex items-center gap-2.5 w-24 flex-shrink-0">
-                        <span className={`text-xs font-bold font-mono ${isCurrentDay ? 'text-primary-700 dark:text-primary-300' : 'text-stone-800 dark:text-neutral-200'}`}>
+                        <span className={`text-xs font-bold font-mono ${isCurrentDay ? 'text-primary-700 dark:text-primary-300' : 'text-neutral-800 dark:text-neutral-200'}`}>
                           {dateText}
                         </span>
-                        <span className="text-[11px] text-stone-400 dark:text-neutral-500">
+                        <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
                           {weekday}
                         </span>
                       </div>
@@ -217,7 +217,7 @@ export const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({
                       {/* Icon & Weather Condition */}
                       <div className="flex items-center gap-2 flex-1 min-w-0 px-2">
                         <WeatherIcon type={day.iconType} className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-xs font-medium text-stone-700 dark:text-neutral-300 truncate">
+                        <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 truncate">
                           {day.weatherText}
                         </span>
                       </div>
@@ -230,11 +230,11 @@ export const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({
 
                       {/* Temp Range */}
                       <div className="text-right font-mono text-xs w-24 flex-shrink-0">
-                        <span className="font-bold text-stone-900 dark:text-white">
+                        <span className="font-bold text-neutral-900 dark:text-white">
                           {day.tempMax}°
                         </span>
-                        <span className="text-stone-400 dark:text-neutral-500 mx-1">/</span>
-                        <span className="text-stone-500 dark:text-neutral-400">
+                        <span className="text-neutral-400 dark:text-neutral-500 mx-1">/</span>
+                        <span className="text-neutral-500 dark:text-neutral-400">
                           {day.tempMin}°
                         </span>
                       </div>
@@ -246,7 +246,7 @@ export const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({
           )}
 
           {/* Attribution & Tech Info */}
-          <div className="pt-2 border-t border-stone-100 dark:border-neutral-800 flex items-center justify-between text-[11px] text-stone-400 dark:text-neutral-600">
+          <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-[11px] text-neutral-400 dark:text-neutral-600">
             <span>免費開源 API：Open-Meteo Weather</span>
             <span>支援離線快取 • 免金鑰</span>
           </div>

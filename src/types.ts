@@ -116,6 +116,20 @@ export interface Collaborator {
   currentViewing?: string; // e.g. "Day 2"
 }
 
+export interface ChecklistItem {
+  id: string;
+  category: string;
+  label: string;
+  checked: boolean;
+}
+
+export interface HotelInfo {
+  name: string;
+  address: string;
+  phone: string;
+  bookingRef?: string;
+}
+
 export interface Trip {
   id: string;
   title: string;
@@ -135,6 +149,8 @@ export interface Trip {
   shareCode: string;
   offlineReady: boolean;
   notes?: string;
+  checklist?: ChecklistItem[];
+  firstNightHotel?: HotelInfo;
 }
 
 export interface CurrencyRate {

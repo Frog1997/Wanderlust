@@ -149,3 +149,120 @@ body {
   padding-top: env(safe-area-inset-top);
 }
 
+
+/* react-datepicker overrides for better UI */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+.react-datepicker__input-container {
+  width: 100%;
+}
+.react-datepicker {
+  @apply bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 shadow-xl rounded-xl font-sans text-sm;
+}
+.react-datepicker__header {
+  @apply bg-neutral-50 dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-700 rounded-t-xl pt-3 pb-2;
+}
+.react-datepicker__current-month, .react-datepicker-time__header {
+  @apply text-neutral-900 dark:text-white font-bold text-sm;
+}
+.react-datepicker__day-name {
+  @apply text-neutral-500 dark:text-neutral-400 font-medium;
+}
+.react-datepicker__day {
+  @apply text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors;
+}
+.react-datepicker__day--selected, .react-datepicker__day--keyboard-selected {
+  @apply !bg-primary-600 hover:!bg-primary-700 !text-white !font-bold;
+}
+.react-datepicker__day--outside-month {
+  @apply text-neutral-300 dark:text-neutral-600;
+}
+.react-datepicker__time-container {
+  @apply border-l border-neutral-200 dark:border-neutral-700;
+}
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item {
+  @apply text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors;
+}
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item--selected {
+  @apply !bg-primary-600 hover:!bg-primary-700 !text-white !font-bold;
+}
+.react-datepicker-popper[data-placement^=bottom] .react-datepicker__triangle::before,
+.react-datepicker-popper[data-placement^=bottom] .react-datepicker__triangle::after {
+  @apply border-b-white dark:border-b-neutral-900;
+}
+.react-datepicker-popper[data-placement^=top] .react-datepicker__triangle::before,
+.react-datepicker-popper[data-placement^=top] .react-datepicker__triangle::after {
+  @apply border-t-white dark:border-t-neutral-900;
+}
+
+/* Hide scrollbar for time picker */
+.react-datepicker__time-list {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.react-datepicker__time-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* Customizing the clear button for DatePicker */
+.react-datepicker__close-icon {
+  padding-right: 12px;
+}
+.react-datepicker__close-icon::after {
+  background-color: var(--color-primary-500);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  height: 18px;
+  width: 18px;
+  line-height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  content: "×";
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+.react-datepicker__close-icon:hover::after {
+  background-color: var(--color-primary-600);
+}
+.dark .react-datepicker__close-icon::after {
+  background-color: var(--color-primary-600);
+}
+.dark .react-datepicker__close-icon:hover::after {
+  background-color: var(--color-primary-500);
+}
+
+/* Better positioning */
+.react-datepicker-wrapper .react-datepicker__close-icon {
+  right: 4px;
+}
+
+/* Better close icon for react-datepicker */
+.react-datepicker__close-icon {
+  right: 6px !important;
+  padding: 0 !important;
+  height: 100% !important;
+}
+.react-datepicker__close-icon::after {
+  content: "✕" !important;
+  background-color: transparent !important;
+  color: #9ca3af !important; /* neutral-400 */
+  font-size: 14px !important;
+  height: 24px !important;
+  width: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  transition: all 0.2s ease !important;
+}
+.react-datepicker__close-icon:hover::after {
+  background-color: #f3f4f6 !important; /* neutral-100 */
+  color: #4b5563 !important; /* neutral-600 */
+}
+.dark .react-datepicker__close-icon:hover::after {
+  background-color: #262626 !important; /* neutral-800 */
+  color: #d4d4d8 !important; /* neutral-300 */
+}

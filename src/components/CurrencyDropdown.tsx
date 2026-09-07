@@ -91,7 +91,7 @@ export const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
         className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer select-none ${
           isGlass
             ? 'bg-white/15 hover:bg-white/20 active:bg-white/25 border border-white/20 text-white shadow-xs focus:ring-2 focus:ring-primary-400'
-            : 'bg-white dark:bg-neutral-900 hover:bg-stone-50 dark:hover:bg-neutral-800 border border-stone-200 dark:border-neutral-700 text-stone-900 dark:text-white shadow-xs focus:ring-2 focus:ring-primary-500'
+            : 'bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-white shadow-xs focus:ring-2 focus:ring-primary-500'
         }`}
       >
         <div className="flex items-center gap-2 min-w-0">
@@ -103,7 +103,7 @@ export const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
           </span>
           <span
             className={`text-xs truncate ${
-              isGlass ? 'text-stone-300' : 'text-stone-500 dark:text-neutral-400'
+              isGlass ? 'text-neutral-300' : 'text-neutral-500 dark:text-neutral-400'
             }`}
           >
             {current.name}
@@ -115,14 +115,14 @@ export const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
             className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${
               isGlass
                 ? 'bg-white/20 text-white'
-                : 'bg-stone-100 dark:bg-neutral-800 text-stone-600 dark:text-neutral-300'
+                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
             }`}
           >
             {current.symbol}
           </span>
           <ChevronDown
             className={`w-4 h-4 transition-transform duration-200 ${
-              isGlass ? 'text-stone-300' : 'text-stone-400 dark:text-neutral-500'
+              isGlass ? 'text-neutral-300' : 'text-neutral-400 dark:text-neutral-500'
             } ${isOpen ? 'rotate-180' : ''}`}
           />
         </div>
@@ -133,19 +133,19 @@ export const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
         <div
           className={`absolute z-50 mt-2 w-full min-w-[240px] rounded-2xl shadow-2xl overflow-hidden border animate-in fade-in zoom-in-95 duration-150 ${
             isGlass
-              ? 'bg-stone-900/95 backdrop-blur-xl border-white/15 text-white'
-              : 'bg-white dark:bg-neutral-900 border-stone-200 dark:border-neutral-700 text-stone-900 dark:text-white'
+              ? 'bg-neutral-900/95 backdrop-blur-xl border-white/15 text-white'
+              : 'bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white'
           }`}
         >
           {/* Quick Search */}
           <div
             className={`p-2 border-b flex items-center gap-2 ${
-              isGlass ? 'border-white/10' : 'border-stone-100 dark:border-neutral-800'
+              isGlass ? 'border-white/10' : 'border-neutral-100 dark:border-neutral-800'
             }`}
           >
             <Search
               className={`w-3.5 h-3.5 ${
-                isGlass ? 'text-stone-400' : 'text-stone-400 dark:text-neutral-500'
+                isGlass ? 'text-neutral-400' : 'text-neutral-400 dark:text-neutral-500'
               }`}
             />
             <input
@@ -154,8 +154,8 @@ export const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
               placeholder="搜尋幣別或國家..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className={`w-full text-xs bg-transparent focus:outline-none placeholder:text-stone-400 dark:placeholder:text-neutral-500 ${
-                isGlass ? 'text-white' : 'text-stone-900 dark:text-white'
+              className={`w-full text-xs bg-transparent focus:outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 ${
+                isGlass ? 'text-white' : 'text-neutral-900 dark:text-white'
               }`}
             />
           </div>
@@ -179,8 +179,8 @@ export const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
                           ? 'bg-primary-600/40 text-white font-bold border border-primary-500/40'
                           : 'bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300 font-bold'
                         : isGlass
-                        ? 'hover:bg-white/10 text-stone-200 hover:text-white'
-                        : 'hover:bg-stone-100 dark:hover:bg-neutral-800 text-stone-700 dark:text-neutral-300'
+                        ? 'hover:bg-white/10 text-neutral-200 hover:text-white'
+                        : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
@@ -209,7 +209,7 @@ export const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
                 );
               })
             ) : (
-              <div className="p-3 text-center text-xs text-stone-400 dark:text-neutral-500">
+              <div className="p-3 text-center text-xs text-neutral-400 dark:text-neutral-500">
                 找不到相關幣別
               </div>
             )}

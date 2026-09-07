@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Trip, Collaborator } from '../types';
 import { Users, Plus, Edit2, Trash2, Check, X, Shield, AlertTriangle } from 'lucide-react';
 import { GOOGLE_ANIMAL_PRESETS, AnimalAvatar, getAnimalByEmojiOrId } from './AnimalAvatar';
+import { ConfirmModal } from './ConfirmModal';
 
 interface MemberManageModalProps {
   trip: Trip;
@@ -28,6 +29,8 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
   onUpdateTrip,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('#3B82F6');
   const [editAvatar, setEditAvatar] = useState('🦊');
@@ -38,6 +41,7 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
   const [newColor, setNewColor] = useState('#3B82F6');
   const [newAvatar, setNewAvatar] = useState('🦊');
   const [errorMessage, setErrorMessage] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -146,30 +150,10 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
     setErrorMessage('');
   };
 
-  const handleDeleteMember = (member: Collaborator) => {
-    if (trip.collaborators.length <= 1) {
-      alert('旅行至少需保留一位成員！');
-      return;
-    }
-
-    // Check if member has existing expenses
-    const paidCount = trip.expenses.filter((e) => e.paidBy === member.name).length;
-    const splitCount = trip.expenses.filter((e) => e.splitWith.includes(member.name)).length;
-
-    if (paidCount > 0) {
-      alert(
-        `無法直接刪除「${member.name}」，因為有 ${paidCount} 筆消費記錄是由此成員代付。請先將該消費記錄修改為其他人代付或刪除該消費項目。`
-      );
-      return;
-    }
-
-    const confirmMsg =
-      splitCount > 0
-        ? `確定要移除成員「${member.name}」嗎？此成員參與了 ${splitCount} 筆分攤，移除後系統將自動將其從相關消費的分攤名單中剔除並重新計算。`
-        : `確定要移除成員「${member.name}」嗎？`;
-
-    if (!window.confirm(confirmMsg)) return;
-
+  
+  const handleDeleteMember = (memberId: string) => {
+    const member = trip.collaborators.find(c => c.id === memberId);
+    if (!member) return;
     const updatedCollaborators = trip.collaborators.filter((c) => c.id !== member.id);
     const updatedExpenses = trip.expenses.map((exp) => {
       if (exp.splitWith.includes(member.name)) {
@@ -187,26 +171,43 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
       collaborators: updatedCollaborators,
       expenses: updatedExpenses,
     });
+    setConfirmDeleteId(null);
+  };
+  
+  const initiateDelete = (member: Collaborator) => {
+    if (trip.collaborators.length <= 1) {
+      setErrorMessage('旅行至少需保留一位成員！');
+      return;
+    }
+
+    const paidCount = trip.expenses.filter((e) => e.paidBy === member.name).length;
+    if (paidCount > 0) {
+      setErrorMessage(`無法直接刪除「${member.name}」，因為有 ${paidCount} 筆消費由其代付。請先修改相關消費記錄。`);
+      return;
+    }
+    
+    setErrorMessage('');
+    setConfirmDeleteId(member.id);
   };
 
+  if (!isOpen) return null;
   return (
     <div
-      id="member-manage-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70 backdrop-blur-sm animate-in fade-in"
     >
       <div
         id="member-manage-modal-card"
-        className="bg-white dark:bg-neutral-900 w-full max-w-lg rounded-2xl shadow-2xl border border-stone-200 dark:border-neutral-700 overflow-hidden flex flex-col max-h-[85vh]"
+        className="bg-white dark:bg-neutral-900 w-full max-w-lg rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden flex flex-col max-h-[85vh]"
       >
         {/* Modal Header */}
-        <div className="p-5 bg-stone-50 dark:bg-neutral-950 border-b border-stone-200 dark:border-neutral-700 flex items-center justify-between">
+        <div className="p-5 bg-neutral-50 dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-primary-50 dark:bg-primary-950/50 text-primary-600 rounded-xl">
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-stone-900 dark:text-white text-base">成員名單管理</h3>
-              <p className="text-xs text-stone-500 dark:text-neutral-400">
+              <h3 className="font-bold text-neutral-900 dark:text-white text-base">成員名單管理</h3>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 新增、修改或自訂同行夥伴，供記帳與分帳結算使用
               </p>
             </div>
@@ -214,7 +215,7 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
           <button
             id="btn-close-member-modal"
             onClick={onClose}
-            className="p-1.5 text-stone-400 dark:text-neutral-500 hover:text-stone-700 dark:hover:text-neutral-200 rounded-lg transition-all"
+            className="p-1.5 text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 rounded-lg transition-all"
           >
             <X className="w-5 h-5" />
           </button>
@@ -246,37 +247,37 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
             <form
               onSubmit={handleAddMember}
               id="form-add-member"
-              className="p-4 bg-stone-50 dark:bg-neutral-950 rounded-xl border border-stone-200 dark:border-neutral-800 space-y-3"
+              className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-3"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-stone-700 dark:text-neutral-300">新增夥伴資訊</span>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300">新增夥伴資訊</span>
                 <button
                   type="button"
                   onClick={() => setIsAdding(false)}
-                  className="text-xs text-stone-400 hover:text-stone-600 dark:text-neutral-500"
+                  className="text-xs text-neutral-400 hover:text-neutral-600 dark:text-neutral-500"
                 >
                   取消
                 </button>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-stone-600 dark:text-neutral-400 mb-1">
+                <label className="block text-[11px] font-bold text-neutral-600 dark:text-neutral-400 mb-1">
                   姓名 / 暱稱 *
                 </label>
                 <input
                   type="text"
-                  required
+                  
                   placeholder="例如：王小明、Sarah、媽媽"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-neutral-700 text-xs bg-white dark:bg-neutral-900 text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 text-xs bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   autoFocus
                 />
               </div>
 
               {/* Color picker */}
               <div>
-                <label className="block text-[11px] font-bold text-stone-600 dark:text-neutral-400 mb-1">
+                <label className="block text-[11px] font-bold text-neutral-600 dark:text-neutral-400 mb-1">
                   代表標籤色彩
                 </label>
                 <div className="flex items-center gap-2">
@@ -296,10 +297,10 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
 
               {/* Avatar Preset Picker (Google Sheet Style Animals) */}
               <div>
-                <label className="block text-[11px] font-bold text-stone-600 dark:text-neutral-400 mb-1">
+                <label className="block text-[11px] font-bold text-neutral-600 dark:text-neutral-400 mb-1">
                   選擇極簡動物頭像 (Google Sheet 風格)
                 </label>
-                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 max-h-40 overflow-y-auto p-1 bg-white dark:bg-neutral-900 rounded-xl border border-stone-200 dark:border-neutral-800">
+                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 max-h-40 overflow-y-auto p-1 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
                   {GOOGLE_ANIMAL_PRESETS.map((animal) => {
                     const isSelected = newAvatar === animal.emoji || newAvatar === animal.id;
                     return (
@@ -313,12 +314,12 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
                         className={`flex flex-col items-center justify-center p-1.5 rounded-xl border transition-all ${
                           isSelected
                             ? 'border-primary-600 bg-primary-50 dark:bg-primary-950/40 shadow-xs scale-105'
-                            : 'border-transparent hover:bg-stone-50 dark:hover:bg-neutral-800 opacity-80 hover:opacity-100'
+                            : 'border-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800 opacity-80 hover:opacity-100'
                         }`}
                         title={animal.name}
                       >
                         <AnimalAvatar avatar={animal.emoji} color={animal.color} size="md" />
-                        <span className="text-[10px] font-bold text-stone-600 dark:text-neutral-400 mt-1 truncate">
+                        <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 mt-1 truncate">
                           {animal.name}
                         </span>
                       </button>
@@ -331,7 +332,7 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAdding(false)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-stone-600 dark:text-neutral-400 hover:bg-stone-200 dark:hover:bg-neutral-800"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800"
                 >
                   取消
                 </button>
@@ -347,7 +348,7 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
 
           {/* Members List */}
           <div className="space-y-2">
-            <div className="text-xs font-bold text-stone-500 dark:text-neutral-400 px-1">
+            <div className="text-xs font-bold text-neutral-500 dark:text-neutral-400 px-1">
               現有成員名單 ({trip.collaborators.length} 人)
             </div>
 
@@ -360,16 +361,16 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
                 <div
                   key={member.id}
                   id={`member-item-${member.id}`}
-                  className="p-3 bg-stone-50 dark:bg-neutral-950 rounded-xl border border-stone-200 dark:border-neutral-800 flex flex-col gap-2.5 transition-all"
+                  className="p-3 bg-neutral-50 dark:bg-neutral-950 rounded-xl border border-neutral-200 dark:border-neutral-800 flex flex-col gap-2.5 transition-all"
                 >
                   {isEditing ? (
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-stone-700 dark:text-neutral-300">修改成員資訊</span>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300">修改成員資訊</span>
                         <button
                           type="button"
                           onClick={() => setEditingId(null)}
-                          className="text-xs text-stone-400 hover:text-stone-600"
+                          className="text-xs text-neutral-400 hover:text-neutral-600"
                         >
                           取消
                         </button>
@@ -382,13 +383,13 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           placeholder="成員名稱"
-                          className="flex-1 px-3 py-2 text-xs rounded-lg border border-stone-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                          className="flex-1 px-3 py-2 text-xs rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
                         />
                       </div>
 
                       {/* Color Picker */}
                       <div>
-                        <div className="text-[11px] font-bold text-stone-500 dark:text-neutral-400 mb-1">標籤色彩</div>
+                        <div className="text-[11px] font-bold text-neutral-500 dark:text-neutral-400 mb-1">標籤色彩</div>
                         <div className="flex items-center gap-2">
                           {COLOR_PRESETS.map((col) => (
                             <button
@@ -406,8 +407,8 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
 
                       {/* Avatar Picker */}
                       <div>
-                        <div className="text-[11px] font-bold text-stone-500 dark:text-neutral-400 mb-1">更換動物頭像</div>
-                        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 max-h-36 overflow-y-auto p-1 bg-white dark:bg-neutral-900 rounded-xl border border-stone-200 dark:border-neutral-800">
+                        <div className="text-[11px] font-bold text-neutral-500 dark:text-neutral-400 mb-1">更換動物頭像</div>
+                        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 max-h-36 overflow-y-auto p-1 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
                           {GOOGLE_ANIMAL_PRESETS.map((animal) => {
                             const isSelected = editAvatar === animal.emoji || editAvatar === animal.id;
                             return (
@@ -421,12 +422,12 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
                                 className={`flex flex-col items-center justify-center p-1.5 rounded-xl border transition-all ${
                                   isSelected
                                     ? 'border-primary-600 bg-primary-50 dark:bg-primary-950/40 shadow-xs scale-105'
-                                    : 'border-transparent hover:bg-stone-50 dark:hover:bg-neutral-800 opacity-80 hover:opacity-100'
+                                    : 'border-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800 opacity-80 hover:opacity-100'
                                 }`}
                                 title={animal.name}
                               >
                                 <AnimalAvatar avatar={animal.emoji} color={animal.color} size="sm" />
-                                <span className="text-[10px] font-bold text-stone-600 dark:text-neutral-400 mt-0.5 truncate">
+                                <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 mt-0.5 truncate">
                                   {animal.name}
                                 </span>
                               </button>
@@ -435,11 +436,11 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
                         </div>
                       </div>
 
-                      <div className="flex justify-end gap-2 pt-1 border-t border-stone-200 dark:border-neutral-800">
+                      <div className="flex justify-end gap-2 pt-1 border-t border-neutral-200 dark:border-neutral-800">
                         <button
                           type="button"
                           onClick={() => setEditingId(null)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-stone-600 dark:text-neutral-400 hover:bg-stone-200 dark:hover:bg-neutral-800"
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800"
                         >
                           取消
                         </button>
@@ -454,13 +455,13 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-3">
                         <AnimalAvatar avatar={member.avatar} name={member.name} color={member.color} size="md" />
 
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-stone-900 dark:text-white">
+                            <span className="text-xs font-bold text-neutral-900 dark:text-white">
                               {member.name}
                             </span>
                             {member.role === 'owner' && (
@@ -470,7 +471,7 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] text-stone-400 dark:text-neutral-500 mt-0.5">
+                          <div className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-0.5">
                             代付 {paidCount} 筆 • 參與分攤 {splitCount} 筆
                           </div>
                         </div>
@@ -480,20 +481,38 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
                         <button
                           id={`btn-edit-member-${member.id}`}
                           onClick={() => handleStartEdit(member)}
-                          className="p-1.5 text-stone-500 hover:text-primary-600 hover:bg-white dark:hover:bg-neutral-800 rounded-lg transition-all"
+                          className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-white dark:hover:bg-neutral-800 rounded-lg transition-all"
                           title="修改姓名與頭像"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
+                        
                         {trip.collaborators.length > 1 && (
-                          <button
-                            id={`btn-delete-member-${member.id}`}
-                            onClick={() => handleDeleteMember(member)}
-                            className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-all"
-                            title="刪除成員"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          confirmDeleteId === member.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => setDeleteConfirmId(member.id)}
+                                className="px-2 py-1 text-[10px] font-bold bg-rose-500 text-white rounded shadow-sm hover:bg-rose-600"
+                              >
+                                確定刪除
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="px-2 py-1 text-[10px] font-bold bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded hover:bg-neutral-300 dark:hover:bg-neutral-700"
+                              >
+                                取消
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              id={`btn-delete-member-${member.id}`}
+                              onClick={() => initiateDelete(member)}
+                              className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-all"
+                              title="刪除成員"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )
                         )}
                       </div>
                     </div>
@@ -505,16 +524,29 @@ export const MemberManageModal: React.FC<MemberManageModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-stone-50 dark:bg-neutral-950 border-t border-stone-200 dark:border-neutral-700 flex justify-end">
+        <div className="p-4 bg-neutral-50 dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-700 flex justify-end">
           <button
             id="btn-done-member-modal"
             onClick={onClose}
-            className="px-5 py-2 bg-stone-900 hover:bg-black dark:bg-white dark:text-stone-900 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+            className="px-5 py-2 bg-neutral-900 hover:bg-black dark:bg-white dark:text-neutral-900 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
           >
             完成
           </button>
         </div>
       </div>
+    
+      <ConfirmModal
+        isOpen={!!deleteConfirmId}
+        title="確認刪除"
+        message="您確定要刪除此項目嗎？此操作無法復原。"
+        onConfirm={() => {
+          if (deleteConfirmId) {
+            handleDeleteMember(deleteConfirmId);
+            setDeleteConfirmId(null);
+          }
+        }}
+        onCancel={() => setDeleteConfirmId(null)}
+      />
     </div>
   );
 };
